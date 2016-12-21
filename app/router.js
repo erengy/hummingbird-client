@@ -39,8 +39,8 @@ RouterInstance.map(function() {
     this.route(media, function() {
       this.route('show', { path: '/:slug' }, function() {
         this.route('episodes');
-        this.route('installments');
-        // this.route('cast');
+        this.route('characters');
+        this.route('cast');
         this.route('reviews');
         this.route('quotes');
       });
