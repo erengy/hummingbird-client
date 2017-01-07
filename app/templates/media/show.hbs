@@ -37,7 +37,7 @@
                       <li class="media--airing-date">
                         <span>
                           {{moment-format media.startDate "MMM D, YYYY"}}
-                          {{#if media.endDate}}
+                          {{#if (and media.endDate airedLongerThanOneDay)}}
                             to {{moment-format media.endDate "MMM D, YYYY"}}
                           {{/if}}
                         </span>
@@ -137,10 +137,9 @@
                 min=0
                 max=media.unitCount
                 update=(queue
-                  (action (mut entry.progress))
+                  (pipe-action (action "sanitizeNumber") (action (mut entry.progress)))
                   (route-action "saveEntryDebounced" entry)
                 )
-                sanitizeInput=(action "sanitizeNumber")
                 placeholder="0"
               }}
               <span>

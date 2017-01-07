@@ -9,6 +9,7 @@ import { invokeAction } from 'ember-invoke-action';
 import RSVP from 'rsvp';
 
 export default Component.extend({
+  initialTab: 'anime',
   notify: service(),
   session: service(),
   store: service(),
@@ -16,13 +17,10 @@ export default Component.extend({
   // Search media and filter out records that are already favorites of the user
   search: task(function* (type, value) {
     yield timeout(250);
-    let field = 'text';
-    if (type === 'character') {
-      field = 'name';
-    }
+    const field = type === 'character' ? 'name' : 'text';
     return yield get(this, 'store').query(type, {
       filter: { [field]: value },
-      page: { limit: 3 }
+      page: { limit: 5 }
     }).then(records => records.reject(record => (
       get(this, `${type}Favorites`).map(item => get(item, 'item.id')).includes(get(record, 'id'))
     )));
@@ -48,6 +46,7 @@ export default Component.extend({
 
   init() {
     this._super(...arguments);
+    // get the actual data
     get(this, 'getAllFavorites').perform().then(([anime, manga, chars]) => {
       set(this, 'animeFavorites', createArrayWithLinks(get(anime, 'value')));
       set(this, 'mangaFavorites', createArrayWithLinks(get(manga, 'value')));
@@ -58,6 +57,15 @@ export default Component.extend({
       get(manga, 'value').forEach(record => invokeAction(this, 'addRecord', record));
       get(chars, 'value').forEach(record => invokeAction(this, 'addRecord', record));
     }).catch(() => {});
+
+    // are we opening this component to a specific tab?
+    const data = get(this, 'componentData');
+    if (data) {
+      const tab = get(data, 'tab');
+      if (tab) {
+        set(this, 'initialTab', tab);
+      }
+    }
   },
 
   actions: {
@@ -81,9 +89,9 @@ export default Component.extend({
     removeItem(item) {
       const type = modelType([get(item, 'item')]);
       const items = get(this, `${type}Favorites`);
-      item.deleteRecord();
       items.removeObject(item);
       items.forEach(record => set(record, 'favRank', items.indexOf(record) + 1));
+      item.deleteRecord();
     },
 
     updateNextPage(type, records, links) {

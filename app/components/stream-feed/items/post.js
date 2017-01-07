@@ -110,8 +110,9 @@ export default Component.extend(ClipboardMixin, {
   },
 
   _hideLongBody() {
+    if (get(this, 'isDestroyed')) { return; }
     const body = this.$('.stream-content-post');
-    if (body && body.height() < body[0].scrollHeight) {
+    if (body && body[0] && body.height() < body[0].scrollHeight) {
       set(this, 'isOverflowed', true);
     } else {
       set(this, 'isOverflowed', false);
@@ -121,8 +122,12 @@ export default Component.extend(ClipboardMixin, {
   _overflow() {
     if (!get(this, 'isExpanded')) {
       scheduleOnce('afterRender', () => {
+        if (get(this, 'isDestroyed')) { return; }
         this._hideLongBody();
-        this.$('img').one('load', () => { this._hideLongBody(); });
+        const image = this.$('img');
+        if (image && image.length > 0) {
+          this.$('img').one('load', () => { this._hideLongBody(); });
+        }
       });
     }
   },
